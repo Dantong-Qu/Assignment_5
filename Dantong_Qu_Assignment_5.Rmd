@@ -168,6 +168,157 @@ ifelse(is.null(venues4$location$latitude),
 glimpse(venue_data4)
 ```
 
+### 5. Visualizing the extracted data
+```{r echo=TRUE, message=FALSE}
+# Set coordinate values to NA where the value of longitude is outside the range (5.866944, 15.043611) or where the value of latitude is outside the range (47.271679, 55.0846) 
+
+range <- data.frame(longitude_range = c(5.866944, 15.043611), latitude_range = c(47.271679, 55.0846))
+
+venue_data4$longitude <- ifelse((as.numeric(venue_data4$longitude) > range[1,1]), venue_data4$longitude, NA)
+venue_data4$longitude <- ifelse((as.numeric(venue_data4$longitude) < range[2,1]), venue_data4$longitude, NA)
+venue_data4$latitude <- ifelse((as.numeric(venue_data4$latitude) > range[1,2]), venue_data4$latitude, NA)
+venue_data4$latitude <- ifelse((as.numeric(venue_data4$latitude) < range[2,2]), venue_data4$latitude, NA)
+
+# Unique the cities
+ggplot(data = venue_data4, aes(x = as.numeric(longitude), y = as.numeric(latitude))) + 
+  geom_polygon(aes(x = long, y = lat, group = group), 
+               data = map_data("world", region = "Germany"),
+               fill = "grey90",
+               color = "black") +
+  geom_point(color = "#1E88E5", alpha = 0.7) +
+  # geom_text_repel(aes(x = as.numeric(longitude), y = as.numeric(latitude), label = city)) +
+  theme_void() + 
+  coord_quickmap() +
+  labs(title = "Event locations across Germany", caption = "Source: ticketmaster.com") + 
+  theme(title = element_text(size=8, face='bold'), plot.caption = element_text(face = "italic"))
+```
+### 6. Event locations in other countries
+Here we choose county : Switzerland.
+```{r echo=TRUE, message=FALSE}
+get_tm <- GET(url = "https://app.ticketmaster.com/discovery/v2/venues",
+              query = list(apikey = tm_key,
+                           locale = "*",
+                           countryCode = "CH"))
+content <- fromJSON(content(get_tm, as = "text", encoding = "UTF-8"))
+venues <- content[["_embedded"]][["venues"]]
+glimpse(venues)
+
+venue_data <- data.frame(venues$name, 
+                         venues$city$name, 
+                         venues$postalCode, 
+                         venues$address$line1, 
+                         venues$url, 
+                         venues$location$longitude, 
+                         venues$location$latitude)
+
+names(venue_data)[1] <- "name"
+names(venue_data)[2] <- "city"
+names(venue_data)[3] <- "postalCode"
+names(venue_data)[4] <- "address"
+names(venue_data)[5] <- "url"
+names(venue_data)[6] <- "longitude"
+names(venue_data)[7] <- "latitude"
+
+glimpse(venue_data)
+
+pages <- as.numeric(content$page$totalPages) - 1
+n <- as.numeric(content$page$totalElements)
+remainder <- n-20*pages
+
+venue_data4 <-
+  data.frame(name = character(n),
+             city = character(n),
+             postalCode = character(n),
+             address = character(n),
+             url = character(n),
+             longitude = character(n),
+             latitude = character(n),
+             stringsAsFactors = FALSE)
+
+for (i in 0:pages-1) {
+  get_venue <- GET(url = "https://app.ticketmaster.com/discovery/v2/venues",
+                                    query = list(apikey = tm_key,
+                                                 locale = "*",
+                                                 countryCode = "CH",
+                                                 page = i))
+  
+  venues4 <- fromJSON(content(get_venue, as = "text", encoding = "UTF-8"))[["_embedded"]][["venues"]]
+
+  ifelse(is.null(venues4$name),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"name"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"name"] <- venues4$name)
+  ifelse(is.null(venues4$city$name),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"city"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"city"] <- venues4$city$name)
+  ifelse(is.null(venues4$postalCode),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"postalCode"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"postalCode"] <- venues4$postalCode)
+  ifelse(is.null(venues4$address$line1),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"address"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"address"] <- venues4$address$line1)
+  ifelse(is.null(venues4$url),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"url"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"url"] <- venues4$url)
+  ifelse(is.null(venues4$location$longitude),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"longitude"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"longitude"] <- venues4$location$longitude)
+  ifelse(is.null(venues4$location$latitude),
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"latitude"] <- NA,
+         venue_data4[(i * 20 + 1):((i + 1) * 20),"latitude"] <- venues4$location$latitude)
+  Sys.sleep(0.2)
+  }
+
+i <- i+1
+get_venue <- GET(url = "https://app.ticketmaster.com/discovery/v2/venues",
+                 query = list(apikey = tm_key,
+                              locale = "*",
+                              countryCode = "CH",
+                              page = i))
+venues4 <- fromJSON(content(get_venue, as = "text", encoding = "UTF-8"))[["_embedded"]][["venues"]]
+
+ifelse(is.null(venues4$name),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"name"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"name"] <- venues4$name)
+ifelse(is.null(venues4$city$name),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"city"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"city"] <- venues4$city$name)
+ifelse(is.null(venues4$postalCode),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"postalCode"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"postalCode"] <- venues4$postalCode)
+ifelse(is.null(venues4$address$line1),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"address"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"address"] <- venues4$address$line1)
+ifelse(is.null(venues4$url),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"url"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"url"] <- venues4$url)
+ifelse(is.null(venues4$location$longitude),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"longitude"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"longitude"] <- venues4$location$longitude)
+ifelse(is.null(venues4$location$latitude),
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"latitude"] <- NA,
+       venue_data4[(i * 20 + 1):(i * 20 + remainder),"latitude"] <- venues4$location$latitude)
+glimpse(venue_data4)
+
+range <- data.frame(longitude_range = c(5.57, 10.29), latitude_range = c(45.49, 47.48))
+
+venue_data4$longitude <- ifelse((as.numeric(venue_data4$longitude) > range[1,1]), venue_data4$longitude, NA)
+venue_data4$longitude <- ifelse((as.numeric(venue_data4$longitude) < range[2,1]), venue_data4$longitude, NA)
+venue_data4$latitude <- ifelse((as.numeric(venue_data4$latitude) > range[1,2]), venue_data4$latitude, NA)
+venue_data4$latitude <- ifelse((as.numeric(venue_data4$latitude) < range[2,2]), venue_data4$latitude, NA)
+
+ggplot(data = venue_data4, aes(x = as.numeric(longitude), y = as.numeric(latitude))) + 
+  geom_polygon(aes(x = long, y = lat, group = group), 
+               data = map_data("world", region = "Switzerland"),
+               fill = "grey90",
+               color = "black") +
+  geom_point(color = "#1E88E5", alpha = 0.7) +
+  geom_text_repel(aes(x = as.numeric(longitude), y = as.numeric(latitude), label = city)) +
+  theme_void() + 
+  coord_quickmap() +
+  labs(title = "Event locations across Switzerland", caption = "Source: ticketmaster.com") + 
+  theme(title = element_text(size=8, face='bold'), plot.caption = element_text(face = "italic"))
+
+```
 
 
 
