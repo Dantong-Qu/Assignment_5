@@ -7,7 +7,7 @@ output: html_document
 
 ```{r echo=TRUE, message=FALSE}
 rm(list = ls())
-setwd("~/Desktop/DS400 Data Science Project Management /Assignment 5")
+setwd("~/Desktop/DS400 Data Science Project Management /Assignment 5/Assignment_5")
 
 if (!require("jsonlite")) install.packages("jsonlite")
 if (!require("httr")) install.packages("httr")
@@ -46,7 +46,43 @@ All API keys are issued with a default quota of 5000 API calls per day and rate 
 source("API_key.R")
 ```
 
+### 3. Interacting with the API - the basics
 
+```{r echo=TRUE, message=FALSE}
+# Perform a first GET request, that searches for event venues in Germany (countryCode = "DE"). 
+get_tm <- GET(url = "https://app.ticketmaster.com/discovery/v2/venues",
+              query = list(apikey = tm_key,
+                           locale = "*",
+                           countryCode = "DE"))
+
+# Extract the content from the response object and inspect the resulting list. 
+content <- fromJSON(content(get_tm, as = "text", encoding = "UTF-8"))
+venues <- content[["_embedded"]][["venues"]]
+glimpse(venues)
+```
+Describe what you can see.
+
+After the first GET request, the response object contains the list element that we want to extract (the comtent), but in row format, it is not easily understandable, so we use the content() function to extract and understand the data, and fromJSON() function help us to consistent and robust converting between JSON and R formats. So we conbine those two function together. In the content data, we can see there are three lists, the information we need in the next task are in the content$_embedded$venues, and the other lists are "_links" and "page".
+
+```{r echo=TRUE, message=FALSE}
+venue_data <- data.frame(venues$name, 
+                         venues$city$name, 
+                         venues$postalCode, 
+                         venues$address$line1, 
+                         venues$url, 
+                         venues$location$longitude, 
+                         venues$location$latitude)
+
+names(venue_data)[1] <- "name"
+names(venue_data)[2] <- "city"
+names(venue_data)[3] <- "postalCode"
+names(venue_data)[4] <- "address"
+names(venue_data)[5] <- "url"
+names(venue_data)[6] <- "longitude"
+names(venue_data)[7] <- "latitude"
+
+glimpse(venue_data)
+```
 
 
 
