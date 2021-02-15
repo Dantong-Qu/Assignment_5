@@ -322,3 +322,4 @@ ggplot(data = venue_data4, aes(x = as.numeric(longitude), y = as.numeric(latitud
 
 
 
+
