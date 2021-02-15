@@ -1,0 +1,59 @@
+---
+title: "Assignment V: GitHub and the ticketmaster.com API" 
+subtitle: "Data Science Project Management | Winter Term 2020/21"
+author: "Dantong QU  5400692" 
+output: html_document
+---
+
+```{r echo=TRUE, message=FALSE}
+rm(list = ls())
+setwd("~/Desktop/DS400 Data Science Project Management /Assignment 5")
+
+if (!require("jsonlite")) install.packages("jsonlite")
+if (!require("httr")) install.packages("httr")
+if (!require("rlist")) install.packages("rlist")
+if (!require("tidyverse")) install.packages("tidyverse")
+if (!require("naniar")) install.packages("naniar")
+if (!require("devtools")) install.packages("devtools")
+if (!require("ggplot2")) install.packages("ggplot2")
+if (!require("gridExtra")) install.packages("gridExtra")
+if (!require("dplyr")) install.packages("dplyr")
+if (!require("directlabels")) install.packages("directlabels")
+if (!require("ggrepel")) install.packages("ggrepel")
+
+library(jsonlite)
+library(httr)
+library(rlist)
+library(tidyverse)
+library(naniar)
+library(devtools)
+library(ggplot2)
+library(gridExtra)
+library(dplyr)
+library(directlabels)
+library(ggrepel)
+```
+
+### 1. Setting up a new GitHub repository
+https://github.com/Dantong-Qu/Assignment_5.git
+
+### 2. Getting to know the API
+
+Familiarize yourself with the features and functionalities of the Ticketmaster Discovery API. Have a particular look at rate limits.
+
+All API keys are issued with a default quota of 5000 API calls per day and rate limitation of 5 requests per second. 
+```{r echo=TRUE, message=FALSE}
+source("API_key.R")
+```
+
+
+
+
+
+
+
+
+
+
+
+
