@@ -62,7 +62,7 @@ glimpse(venues)
 ```
 Describe what you can see.
 
-After the first GET request, the response object contains the list element that we want to extract (the comtent), but in row format, it is not easily understandable, so we use the content() function to extract and understand the data, and fromJSON() function help us to consistent and robust converting between JSON and R formats. So we conbine those two function together. In the content data, we can see there are three lists, the information we need in the next task are in the content$_embedded$venues, and the other lists are "_links" and "page".
+After the first GET request, the response object contains the list element that we want to extract (the comtent), but in row format, it is not easily understandable, so we use the content() function to extract and understand the data, and fromJSON() function help us to consistent and robust converting between JSON and R formats. So we conbine those two function together. In the content data, we can see there are three lists, the information we need in the next task are in the content\$_embedded\$venues, and the other lists are "_links" and "page".
 
 ```{r echo=TRUE, message=FALSE}
 venue_data <- data.frame(venues$name, 
