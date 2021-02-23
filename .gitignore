@@ -2,4 +2,5 @@
 .Rhistory
 .RData
 .Ruserdata
+.API_key.R
 API_key.R
